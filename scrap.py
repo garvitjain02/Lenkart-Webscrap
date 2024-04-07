@@ -90,4 +90,4 @@ if __name__ == '__main__':
     lenskart_df.dropna(subset=['title'], inplace=True)
 
     # Save DataFrame to CSV
-    lenskart_df.to_csv("lenskart_data.csv", header=True, index=False)
+    lenskart_df.to_csv("product_data.csv", header=True, index=False)
