@@ -11,6 +11,41 @@ def get_title(soup):
         return title_value
     except AttributeError:
         return ""
+    
+
+#Function to get product keywords 
+def get_prodkeywords(soup):
+    keywords = ""
+    try:
+        tech = soup.find_all("a", attrs={"class":"AnchorTag--u22q95 hcBJcI"})
+        for line in tech:
+            keywords = keywords + ","+line.text
+        return keywords
+    except AttributeError:
+        return ""
+    
+
+# Function to extract Product warranty
+def get_prodwarranty(soup):
+    keywords = ""
+    try:
+        warranty = soup.find("small", attrs={"class":"SecondaryText--wwg5ji jNlGsQ"})
+        # print(warranty)
+        return processString(warranty.text).strip()
+    except AttributeError:
+        return ""
+    
+    
+# Function to extract Process string
+def processString(str):
+    pr_str = ""
+    for c in str:
+        if(c!='(' and c!=')'):
+            pr_str += c
+
+        
+    return pr_str
+
 
 # Function to extract Product Brand
 def get_brand(soup):
@@ -20,12 +55,14 @@ def get_brand(soup):
         return brand_value
     except AttributeError:
         return ""
+    
 
 # Function to extract Product Price
 def get_price(soup):
     try:
-        price = soup.find("span", attrs={'class':'CurrencySpan--14uitta bbHZVj'}).string.strip()
-        return price
+        price = soup.find("span", attrs={'class':'SpecialPriceSpan--1olt47v eowfNn'}).find_all("span")[1]
+        act_price = price.text
+        return act_price
     except AttributeError:
         return ""
 
@@ -38,10 +75,10 @@ def extract_technical_info(soup):
         for line in tech_lines:
             key_element = line.find("span", class_="TechInfoKey--d2dhxn cbKQsk")
             value_element = line.find("span", class_="TechInfoVal--1wwve45 dGIuxy")
-            if key_element and value_element:
-                key = key_element.text.strip()
-                value = value_element.text.strip()
-                technical_info[key] = value
+            key = key_element.text.strip()
+            value = value_element.text.strip()
+            # print(key," : ",value)
+            technical_info[key] = value
     except AttributeError:
         pass
     return technical_info
@@ -58,32 +95,41 @@ if __name__ == '__main__':
 
     # Soup Object containing all data
     soup = BeautifulSoup(webpage.content, "html.parser")
-    print(soup.prettify())
+    # print(soup.prettify())
     # Fetch links as List of Tag Objects
     links = soup.find_all("a", attrs={"class":"AnchorWrapper--1smmibb dSYMGn"})
-    #print(links)
-    # Store the links
+    # print(links)
+    # # Store the links
     links_list = [link.get('href') for link in links]
+    
+    
 
-    data = {"title": [], "brand": [], "price": [], "product_id": [], "frame_size": [], "frame_width": []}
+    data = {"title": [],"url":[], "brand": [], "price(in Rupees)": [] , "frame_size": [], "frame_width": [],"model_no":[],"productKeys":[],"warranty":[]}
 
-    # Loop for extracting product details from each link 
+    # # Loop for extracting product details from each link 
     for link in links_list:
         new_webpage = requests.get("https://www.lenskart.com" + link, headers=HEADERS)
+        data['url'].append("https://www.lenskart.com" + link)
         new_soup = BeautifulSoup(new_webpage.content, "html.parser")
 
         # Function calls to display all necessary product information
         data['title'].append(get_title(new_soup))
         data['brand'].append(get_brand(new_soup))
-        data['price'].append(get_price(new_soup))
+        data['price(in Rupees)'].append(get_price(new_soup))
+        data['productKeys'].append(get_prodkeywords(new_soup))
+        data['warranty'].append(get_prodwarranty(new_soup))
+        # data['productId'].append(get_prodid(new_soup))
+        
+        # data['product_id'].append(get_prodid(new_soup))
+        
         
         # Extract technical information
         tech_info = extract_technical_info(new_soup)
-        data['product_id'].append(tech_info.get('Product id', ''))
         data['frame_size'].append(tech_info.get('Frame Size', ''))
         data['frame_width'].append(tech_info.get('Frame Width', ''))
+        data['model_no'].append(tech_info.get('Model No.', ''))
 
-    # Create DataFrame from the dictionary
+    # # Create DataFrame from the dictionary
     lenskart_df = pd.DataFrame(data)
 
     # Remove rows with missing title
