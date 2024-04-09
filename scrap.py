@@ -87,53 +87,63 @@ if __name__ == '__main__':
     # add your user agent 
     HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36', 'Accept-Language': 'en-US, en;q=0.5'}
 
-    # The webpage URL
-    URL = "https://www.lenskart.com/eyeglasses.html"
+    arr = ["eyeglasses","sunglasses","eyeglasses/promotions/all-kids-eyeglasses","eyeglasses/collections/all-computer-glasses"]
 
-    # HTTP Request
-    webpage = requests.get(URL, headers=HEADERS)
+    for str in arr :
 
-    # Soup Object containing all data
-    soup = BeautifulSoup(webpage.content, "html.parser")
-    # print(soup.prettify())
-    # Fetch links as List of Tag Objects
-    links = soup.find_all("a", attrs={"class":"AnchorWrapper--1smmibb dSYMGn"})
-    # print(links)
-    # # Store the links
-    links_list = [link.get('href') for link in links]
-    
-    
+        # The webpage URL
+        URL = "https://www.lenskart.com/" +str+ ".html"
 
-    data = {"title": [],"url":[], "brand": [], "price(in Rupees)": [] , "frame_size": [], "frame_width": [],"model_no":[],"productKeys":[],"warranty":[]}
+        # HTTP Request
+        webpage = requests.get(URL, headers=HEADERS)
 
-    # # Loop for extracting product details from each link 
-    for link in links_list:
-        new_webpage = requests.get("https://www.lenskart.com" + link, headers=HEADERS)
-        data['url'].append("https://www.lenskart.com" + link)
-        new_soup = BeautifulSoup(new_webpage.content, "html.parser")
-
-        # Function calls to display all necessary product information
-        data['title'].append(get_title(new_soup))
-        data['brand'].append(get_brand(new_soup))
-        data['price(in Rupees)'].append(get_price(new_soup))
-        data['productKeys'].append(get_prodkeywords(new_soup))
-        data['warranty'].append(get_prodwarranty(new_soup))
-        # data['productId'].append(get_prodid(new_soup))
-        
-        # data['product_id'].append(get_prodid(new_soup))
+        # Soup Object containing all data
+        soup = BeautifulSoup(webpage.content, "html.parser")
+        # print(soup.prettify())
+        # Fetch links as List of Tag Objects
+        links = soup.find_all("a", attrs={"class":"AnchorWrapper--1smmibb dSYMGn"})
+        # print(links)
+        # # Store the links
+        links_list = [link.get('href') for link in links]
         
         
-        # Extract technical information
-        tech_info = extract_technical_info(new_soup)
-        data['frame_size'].append(tech_info.get('Frame Size', ''))
-        data['frame_width'].append(tech_info.get('Frame Width', ''))
-        data['model_no'].append(tech_info.get('Model No.', ''))
 
-    # # Create DataFrame from the dictionary
-    lenskart_df = pd.DataFrame(data)
+        data = {"title": [],"url":[], "brand": [], "price(in Rupees)": [] , "frame_size": [], "frame_width": [],"model_no":[],"productKeys":[],"warranty":[]}
 
-    # Remove rows with missing title
-    lenskart_df.dropna(subset=['title'], inplace=True)
+        # # Loop for extracting product details from each link 
+        for link in links_list:
+            new_webpage = requests.get("https://www.lenskart.com" + link, headers=HEADERS)
+            data['url'].append("https://www.lenskart.com" + link)
+            new_soup = BeautifulSoup(new_webpage.content, "html.parser")
 
-    # Save DataFrame to CSV
-    lenskart_df.to_csv("product_data.csv", header=True, index=False)
+            # Function calls to display all necessary product information
+            data['title'].append(get_title(new_soup))
+            data['brand'].append(get_brand(new_soup))
+            data['price(in Rupees)'].append(get_price(new_soup))
+            data['productKeys'].append(get_prodkeywords(new_soup))
+            data['warranty'].append(get_prodwarranty(new_soup))
+            # data['productId'].append(get_prodid(new_soup))
+            
+            # data['product_id'].append(get_prodid(new_soup))
+            
+            
+            # Extract technical information
+            tech_info = extract_technical_info(new_soup)
+            data['frame_size'].append(tech_info.get('Frame Size', ''))
+            data['frame_width'].append(tech_info.get('Frame Width', ''))
+            data['model_no'].append(tech_info.get('Model No.', ''))
+
+        # # Create DataFrame from the dictionary
+        lenskart_df = pd.DataFrame(data)
+
+        # Remove rows with missing title
+        lenskart_df.dropna(subset=['title'], inplace=True)
+
+        # Save DataFrame to CSV
+        if(str=="eyeglasses/promotions/all-kids-eyeglasses"):
+          str = "kidsglasses"
+           
+        if( str=="eyeglasses/collections/all-computer-glasses"):
+          str = "computerglasses"
+
+        lenskart_df.to_csv(str+"_data.csv", header=True, index=False)
