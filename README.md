@@ -1,3 +1,3 @@
 # Web scrapping
 
-JMAN project
+Scrapped Products and Stores Data from Lenskart
